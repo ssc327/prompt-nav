@@ -15,7 +15,7 @@ If a prompt is so far up that the app hasn't drawn it yet, the jump walks there:
 At the prompt of a Claude Code terminal session:
 
 ```
-/plugin install prompt-nav --marketplace <owner>/<repo>
+/plugin install prompt-nav --marketplace ssc327/prompt-nav
 ```
 
 Answer `y` to add the marketplace, then press Enter to install for your user. It is active right away. Installed at the user scope, it also loads in the Claude desktop app's Code tab.
