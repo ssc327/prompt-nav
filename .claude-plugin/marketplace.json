@@ -1,0 +1,5 @@
+{
+  "name": "prompt-nav",
+  "owner": { "name": "Surkh Singh" },
+  "plugins": [{ "name": "prompt-nav", "source": "./" }]
+}
