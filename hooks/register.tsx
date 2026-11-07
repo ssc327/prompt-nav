@@ -2,13 +2,15 @@ import { atom, read, update } from 'claude-code'
 import type { PromptList } from '../types'
 import type { EngineInterface, Register } from 'claude-code'
 
-// prompt-nav: keeps the prompts you sent this session, shows the latest one in
-// a band above the input, and lets you step up and down the chat between them
+// prompt-nav: keeps the prompts you sent this session, shows the one that
+// started it and the latest one in a boxed band above the input, and lets you step up and down the chat between them
 // (▲ / ▼), or pick one from a list (/prompts).
 
 const PANE = 'prompt-nav'
 const prompts = atom({ plugin: 'prompt-nav', key: 'prompts' } as const, [] as PromptList)
 const cursor = atom({ plugin: 'prompt-nav', key: 'cursor' } as const, null)
+// The prompt that started the session. Kept apart from the list, which is capped.
+const original = atom({ plugin: 'prompt-nav', key: 'original' } as const, null)
 const isHidden = atom({ plugin: 'prompt-nav', key: 'isHidden' } as const, false)
 
 const PERSON = new Set(['composer', 'bridge', 'sdk'])
@@ -112,7 +114,10 @@ export const register: Register = on => {
       const seen = messages
         .filter(m => m.role === 'user' && !(m.toolResults?.length) && isPrompt(m.text))
         .map(m => norm(m.text))
-      if (seen.length > 0) await update($, prompts, () => seen)
+      if (seen.length > 0) {
+        await update($, prompts, () => seen)
+        await update($, original, () => seen[0] ?? null)
+      }
     }
     return next(e)
   })
@@ -123,6 +128,7 @@ export const register: Register = on => {
       const kind = result.origin?.kind ?? e.origin?.kind
       if (kind === undefined || PERSON.has(kind)) {
         await update($, prompts, list => [...list, norm(result.text)].slice(-500))
+        await update($, original, first => first ?? norm(result.text))
         await update($, cursor, () => null)
         await update($, isHidden, () => false)
       }
@@ -165,12 +171,27 @@ export const register: Register = on => {
     const { Box, Button, Text } = $.ui.resolve(e)
     const n = list.length
     const at = (await read($, cursor)) ?? n - 1
-    const room = Math.max(20, (e.props.bodyColumns ?? 80) - 2)
+    const first = (await read($, original)) ?? list[0] ?? ''
+    // Cells left for the text once the label, border and padding are taken.
+    const room = Math.max(20, (e.props.bodyColumns ?? 80) - 6)
+    const canGoStart = norm(list[0] ?? '') === first
+    const isLatest = at === n - 1
 
     return (
-      <Box flexDirection="column">
+      <Box flexDirection="column" borderStyle="round" borderColor="suggestion" paddingX={1}>
+        {n > 1 && (
+          <Box flexDirection="row">
+            <Text bold inverse color="warning"> ◆ STARTED </Text>
+            <Text bold wrap="truncate-end"> {clip(first, room)}</Text>
+            {canGoStart && <Text> </Text>}
+            {canGoStart && <Button key="start" label="Go" onPress={() => jump($, 0)} />}
+          </Box>
+        )}
         <Box flexDirection="row">
-          <Text dimColor>{at === n - 1 ? 'Last prompt' : 'Prompt'} {at + 1}/{n}  </Text>
+          <Text bold inverse color="suggestion"> {isLatest ? '↳ LATEST' : '↳ PROMPT'} {at + 1}/{n} </Text>
+          <Text bold wrap="truncate-end"> {clip(list[at] ?? '', room)}</Text>
+        </Box>
+        <Box flexDirection="row">
           <Button key="prev" label="▲ Prev" onPress={() => jump($, at - 1)} />
           <Text> </Text>
           <Button key="next" label="▼ Next" onPress={() => jump($, at + 1)} />
@@ -179,7 +200,6 @@ export const register: Register = on => {
           <Text> </Text>
           <Button key="hide" label="Hide" plain onPress={() => update($, isHidden, () => true)} />
         </Box>
-        <Text wrap="truncate-end">↳ {clip(list[at] ?? "", room * 2)}</Text>
       </Box>
     )
   })

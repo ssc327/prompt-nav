@@ -37,3 +37,20 @@ test('the /prompts pane lists every prompt', async ($, on) => {
   expect(await ui.find({ key: 'p1' })).toBeDefined()
   await ui.unmount()
 })
+
+test('the band always shows the prompt that started the session', async ($, on) => {
+  on('prompt.submit', ($, e) => ({ text: e.text, origin: e.origin }))
+  for (const text of ['migrate billing to gRPC', 'add proto', 'fix the failing test']) {
+    await $.prompt.submit({ text, wait: false, origin: { kind: 'composer' } })
+  }
+  for (const surface of SURFACES) {
+    const ui = await $.ui.mount({ plugin: 'prompt-nav', surface, ...BAND })
+    expect(await ui.find({ text: /STARTED/ })).toBeDefined()
+    expect(await ui.find({ text: /migrate billing to gRPC/ })).toBeDefined()
+    await ui.press({ key: 'prev' })
+    expect(await ui.find({ text: /migrate billing to gRPC/ })).toBeDefined()
+    expect(await ui.find({ text: /add proto/ })).toBeDefined()
+    await ui.press({ key: 'next' })
+    await ui.unmount()
+  }
+})

@@ -1,7 +1,7 @@
 {
   "name": "prompt-nav",
-  "version": "0.2.0",
-  "description": "Shows your last prompt above the input and lets you jump between your own prompts",
+  "version": "0.3.0",
+  "description": "Shows the prompt that started the session and your last prompt above the input and lets you jump between your own prompts",
   "types": "./types/index.d.ts",
   "author": {
     "name": "Surkh Singh"
