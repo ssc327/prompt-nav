@@ -1,8 +1,8 @@
 # prompt-nav
 
-A Claude Code mod for long sessions. It shows the last prompt you sent and lets you hop up and down the chat from one of your prompts to the next.
+A Claude Code mod for long sessions. It keeps the prompt that started the session and your latest one on screen, and lets you hop up and down the chat from one of your prompts to the next.
 
-- **A strip above the input box** shows your latest prompt, e.g. `Last prompt 7/7 ↳ fix the failing test`.
+- **A boxed strip above the input** has two bold, highlighted lines: `◆ STARTED` with the prompt that began the session, and `↳ LATEST 7/7` with your most recent one. **Go** jumps to the first prompt. With a single prompt, only the latest line shows.
 - **▲ Prev / ▼ Next** step through your own prompts and scroll the chat to each one.
 - **All**, or `/prompts`, opens a panel listing every prompt. Pick one to jump to it.
 - **Hide** tucks the strip away until your next prompt.
